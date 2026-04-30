@@ -113,8 +113,8 @@ func GetRecommendedRestaurants(userLat, userLon float64) ([]RestaurantWithScore,
 }
 
 // 搜索框相关逻辑
-func GetRestaurants(userLat, userLon float64, search, sortBy string) ([]RestaurantWithScore, error) {
-	cacheKey := fmt.Sprintf("search:%.2f:%.2f:%s:%s", userLat, userLon, search, sortBy)
+func GetRestaurants(userLat, userLon float64, search, sortBy string, hasLocation bool) ([]RestaurantWithScore, error) {
+	cacheKey := fmt.Sprintf("search:%.2f:%.2f:%s:%s:%v", userLat, userLon, search, sortBy, hasLocation)
 	cacheData, err := database.RedisClient.Get(database.Ctx, cacheKey).Result()
 	if err == nil {
 		var results []RestaurantWithScore
@@ -133,13 +133,22 @@ func GetRestaurants(userLat, userLon float64, search, sortBy string) ([]Restaura
 			continue
 		}
 
-		dist := utils.Distance(userLat, userLon, rest.Latitude, rest.Longitude)
+		var dist float64
+		var finalScore float64
 
-		scorePart := rest.AverageScore * 0.6
-		distPart := (1.0 / (dist + 1.0)) * 0.3
-		reviewPart := math.Log10(float64(rest.ReviewCount)+1.0) * 0.1
-
-		finalScore := scorePart + distPart + reviewPart
+		if hasLocation {
+			dist = utils.Distance(userLat, userLon, rest.Latitude, rest.Longitude)
+			scorePart := rest.AverageScore * 0.6
+			distPart := (1.0 / (dist + 1.0)) * 0.3
+			reviewPart := math.Log10(float64(rest.ReviewCount)+1.0) * 0.1
+			finalScore = scorePart + distPart + reviewPart
+		} else {
+			// 没有定位时，只按评分和人气计算
+			scorePart := rest.AverageScore * 0.7
+			reviewPart := math.Log10(float64(rest.ReviewCount)+1.0) * 0.3
+			finalScore = scorePart + reviewPart
+			dist = -1 // 标记为无距离
+		}
 
 		results = append(results, RestaurantWithScore{
 			Restaurant: rest,
@@ -162,9 +171,17 @@ func GetRestaurants(userLat, userLon float64, search, sortBy string) ([]Restaura
 			return results[i].FinalScore > results[j].FinalScore
 		})
 	default:
-		sort.Slice(results, func(i, j int) bool {
-			return results[i].Distance < results[j].Distance
-		})
+		if hasLocation {
+			// 有定位时按距离排序
+			sort.Slice(results, func(i, j int) bool {
+				return results[i].Distance < results[j].Distance
+			})
+		} else {
+			// 无定位时按评分排序
+			sort.Slice(results, func(i, j int) bool {
+				return results[i].AverageScore > results[j].AverageScore
+			})
+		}
 	}
 
 	data, _ := json.Marshal(results)
