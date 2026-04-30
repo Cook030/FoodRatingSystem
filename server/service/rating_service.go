@@ -9,10 +9,9 @@ import (
 	"time"
 )
 
-func SubmitReview(targetrest interface{}, userid string, username string, stars float64, comment string) error {
+func SubmitReview(targetrest interface{}, userid uint, stars float64, comment string) error {
 	rating := model.Rating{
 		UserID:    userid,
-		UserName:  username,
 		Stars:     stars,
 		Comment:   comment,
 		CreatedAt: time.Now(),
@@ -21,7 +20,6 @@ func SubmitReview(targetrest interface{}, userid string, username string, stars 
 	if v, ok := targetrest.(int); ok {
 		resID = uint(v)
 	} else if v, ok := targetrest.(string); ok {
-		rating.RestaurantName = v
 		var r model.Restaurant
 		err := database.DB.Where("name = ?", v).First(&r).Error
 		if err != nil {
@@ -31,6 +29,7 @@ func SubmitReview(targetrest interface{}, userid string, username string, stars 
 	} else {
 		return errors.New("第一个参数必须是餐厅ID(int)或者餐厅名(string)")
 	}
+
 	//最终都换成id判断
 	rating.RestaurantID = resID
 
@@ -51,7 +50,7 @@ func ClearRatingCache(restaurantID uint) {
 	database.RedisClient.Del(database.Ctx, fmt.Sprintf("restaurant:%d", restaurantID))
 	database.RedisClient.Del(database.Ctx, fmt.Sprintf("ratings:%d", restaurantID))
 
-	//这三个是处理后的间接的，需要根据餐厅ID来匹配，所以分为一组遍历字符串切片查了删
+	//这三个是处理后的间接的，需要根据餐厅id来匹配，所以一起放在切片里遍历查了再删
 	patterns := []string{"recommend:*", "nearby:*", "search:*"}
 	for _, pattern := range patterns {
 		keys, _ := database.RedisClient.Keys(database.Ctx, pattern).Result()

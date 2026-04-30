@@ -62,7 +62,7 @@ export const useLocation = (): LocationState & { requestLocation: () => void } =
         });
       },
       {
-        enableHighAccuracy: true,
+        enableHighAccuracy: false,
         timeout: 12000,
         maximumAge: 0,
       }
