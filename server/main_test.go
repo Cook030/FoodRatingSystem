@@ -11,22 +11,32 @@ func TestSubmitReviewIntegration(t *testing.T) {
 	database.Connectdb()
 
 	targetResName := "南湖美食广场"
-	testUserID := "test_user_999"
 	testUserName := "test_user_name_999"
 	testStars := 5.0
 	testComment := "单元测试自动生成的评价"
 
+	var testUserID uint
+	var testUser model.User
+	err := database.DB.Where("user_name = ?", testUserName).FirstOrCreate(&testUser, model.User{
+		UserName:     testUserName,
+		PasswordHash: "test_password_hash",
+	}).Error
+	if err != nil {
+		t.Fatalf("无法创建/获取测试用户: %v", err)
+	}
+	testUserID = testUser.ID
+
 	var oldScore float64
 	var oldRefID uint
 	var r model.Restaurant
-	err := database.DB.Where("name = ?", targetResName).First(&r).Error
+	err = database.DB.Where("name = ?", targetResName).First(&r).Error
 	if err != nil {
 		t.Fatalf("无法获取测试餐厅数据: %v", err)
 	}
 	oldRefID = r.ID
 	oldScore = r.AverageScore
 
-	err = service.SubmitReview(targetResName, testUserID, testUserName, testStars, testComment)
+	err = service.SubmitReview(targetResName, testUserID, testStars, testComment)
 	if err != nil {
 		t.Errorf("SubmitReview 执行报错: %v", err)
 	}
@@ -46,6 +56,7 @@ func TestSubmitReviewIntegration(t *testing.T) {
 
 	defer func() {
 		database.DB.Where("user_id = ?", testUserID).Delete(&model.Rating{})
+		database.DB.Where("user_name = ?", testUserName).Delete(&model.User{})
 		t.Log("🧹 测试数据已清理")
 	}()
 }

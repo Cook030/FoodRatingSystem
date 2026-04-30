@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"foodRatingSystem/middleware"
 	"foodRatingSystem/model"
 	"foodRatingSystem/service"
@@ -37,7 +38,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateToken(registeredUser.UserID, registeredUser.UserName)
+	token, err := middleware.GenerateToken(fmt.Sprintf("%d", registeredUser.ID), registeredUser.UserName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "生成token失败"})
 		return
@@ -63,7 +64,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateToken(user.UserID, user.UserName)
+	token, err := middleware.GenerateToken(fmt.Sprintf("%d", user.ID), user.UserName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "生成token失败"})
 		return
