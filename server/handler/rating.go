@@ -38,7 +38,7 @@ func SubmitRating(c *gin.Context) {
 		targetrest = req.RestaurantName
 	}
 
-	err = service.SubmitReview(targetrest, user.ID, req.Stars, req.Comment)
+	err = service.SubmitReview(targetrest, user.UserID, user.UserName, req.Stars, req.Comment)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

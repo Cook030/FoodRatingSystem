@@ -46,7 +46,7 @@ export const restaurantApi = {
   getRatings: (id: number) => 
     api.get<Rating[]>(`/restaurants/${id}/ratings`),
 
-  getAll: (lat?: number, lng?: number, search?: string, sort?: string) =>
+  getAll: (lat: number, lng: number, search: string, sort: string) =>
     api.get<Restaurant[]>('/restaurants', { params: { lat, lng, search, sort } }),
 
   create:(data:{name:string,latitude:number,longitude:number})=>

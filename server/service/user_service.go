@@ -2,6 +2,8 @@ package service
 
 import (
 	"errors"
+	"fmt"
+	"foodRatingSystem/database"
 	"foodRatingSystem/model"
 	"foodRatingSystem/repository"
 
@@ -14,6 +16,10 @@ func Register(user *model.User) (*model.User, error) {
 	if username == "" || password == "" {
 		return nil, errors.New("用户名/密码为空！")
 	}
+
+	var count int64
+	database.DB.Model(&model.User{}).Count(&count)
+	user.UserID = fmt.Sprintf("user_%d", count+1)
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

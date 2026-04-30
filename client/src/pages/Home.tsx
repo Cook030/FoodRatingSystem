@@ -57,8 +57,8 @@ const Home = () => {
     try {
       setLoading(true);
       setError(null);
-      const lat = coords?.lat;
-      const lng = coords?.lng;
+      const lat = coords?.lat || 39.9042;
+      const lng = coords?.lng || 116.4074;
       
       const res = await restaurantApi.getAll(lat, lng, searchTerm, sort);
       setRestaurants(res.data || []); 
@@ -71,8 +71,8 @@ const Home = () => {
 
   const fetchRecommended = async () => {
     try {
-      const lat = coords?.lat;
-      const lng = coords?.lng;
+      const lat = coords?.lat || 39.9042;
+      const lng = coords?.lng || 116.4074;
       
       const res = await restaurantApi.getAll(lat, lng, '', 'recommended');
       setRecommended(res.data?.slice(0, 5) || []); 
@@ -108,7 +108,7 @@ const Home = () => {
     setSortBy(newSort);
   };
 
-  const isLoading = loading || locationLoading;
+  const isLoading = loading;
 
   if (isLoading && restaurants.length === 0) {
     return (

@@ -35,17 +35,10 @@ func GetRestaurants(c *gin.Context) {
 	search := c.Query("search")
 	sortBy := c.DefaultQuery("sort", "distance")
 
-	var lat, lon float64
-	var hasLocation bool
-	if latStr != "" && lonStr != "" {
-		lat, _ = strconv.ParseFloat(latStr, 64)
-		lon, _ = strconv.ParseFloat(lonStr, 64)
-		if lat != 0 && lon != 0 {
-			hasLocation = true
-		}
-	}
+	lat, _ := strconv.ParseFloat(latStr, 64)
+	lon, _ := strconv.ParseFloat(lonStr, 64)
 
-	data, err := service.GetRestaurants(lat, lon, search, sortBy, hasLocation)
+	data, err := service.GetRestaurants(lat, lon, search, sortBy)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
