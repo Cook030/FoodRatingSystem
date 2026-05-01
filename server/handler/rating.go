@@ -25,8 +25,11 @@ func SubmitRating(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetString("user_id")
+	userName := c.GetString("user_name")
+
 	var user model.User
-	if err := database.DB.Where("user_name = ?", req.Username).First(&user).Error; err != nil {
+	if err := database.DB.Where("id = ? AND user_name = ?", userID, userName).First(&user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "用户不存在"})
 		return
 	}
