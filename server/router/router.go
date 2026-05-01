@@ -13,18 +13,22 @@ func SetupRouter() *gin.Engine {
 	// 开启跨域
 	r.Use(middleware.Cors()) //获得一个engine实例
 
-	api := r.Group("/api") //用 r 创建分组 /api
+	api := r.Group("/api")
 	{
 		api.GET("/restaurants/nearby", handler.GetNearbyRestaurants)
 		api.GET("/restaurants", handler.GetRestaurants)
 		api.GET("/restaurants/:id", handler.GetRestaurantDetail)
 		api.GET("/restaurants/:id/ratings", handler.GetRestaurantRatings)
 
-		api.POST("/rating", handler.SubmitRating)
-		api.POST("/restaurants", handler.CreateRestaurant)
-
 		api.POST("/user/register", handler.Register)
 		api.POST("/user/login", handler.Login)
+
+		//读公开，写保护
+		auth := api.Group("", middleware.JWTAuth())
+		{
+			auth.POST("/rating", handler.SubmitRating)
+			auth.POST("/restaurants", handler.CreateRestaurant)
+		}
 	}
 
 	return r
