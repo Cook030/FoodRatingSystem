@@ -27,9 +27,22 @@ const api = axios.create({
   timeout: 5000,
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ error?: string; message?: string }>) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
     const message = error.response?.data?.error || error.response?.data?.message || error.message || '请求失败';
     console.error('API Error:', message);
     return Promise.reject(new Error(message));
